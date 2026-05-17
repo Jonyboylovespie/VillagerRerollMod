@@ -37,6 +37,7 @@ import com.villagerreroll.config.VillagerRerollConfig;
 
 public final class AutoLibrarianController {
 	private static final Method MERCHANT_POST_BUTTON_CLICK = findMerchantPostButtonClick();
+	private static final java.lang.reflect.Field MERCHANT_SELECTED_OFFER = findMerchantSelectedOfferField();
 
 	private record BookTradeInfo(String enchantmentId, int level, int price) {
 	}
@@ -426,6 +427,11 @@ public final class AutoLibrarianController {
 		if(client.player == null || client.gameMode == null)
 			return;
 
+		if(isAxeAboutToBreak(client)) {
+			stop(client, "Stopped before the axe broke.");
+			return;
+		}
+
 		if(state.canBeReplaced()) {
 			if(client.gameMode.isDestroying())
 				client.gameMode.stopDestroyBlock();
@@ -449,6 +455,11 @@ public final class AutoLibrarianController {
 
 		if(!client.player.getAbilities().instabuild && !equipBestAxe(client)) {
 			stop(client, "Put an axe in your hotbar or inventory.");
+			return;
+		}
+
+		if(isAxeAboutToBreak(client)) {
+			stop(client, "Stopped before the axe broke.");
 			return;
 		}
 
@@ -578,9 +589,11 @@ public final class AutoLibrarianController {
 
 		try {
 			screen.getMenu().setSelectionHint(offerIndex);
+			if(MERCHANT_SELECTED_OFFER != null)
+				MERCHANT_SELECTED_OFFER.setInt(screen, offerIndex);
 			MERCHANT_POST_BUTTON_CLICK.invoke(screen);
 			return true;
-		}catch(ReflectiveOperationException e) {
+		}catch(ReflectiveOperationException | IllegalArgumentException e) {
 			notify(client, "Failed to lock the trade.");
 			e.printStackTrace();
 			return false;
@@ -597,6 +610,45 @@ public final class AutoLibrarianController {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	private static java.lang.reflect.Field findMerchantSelectedOfferField() {
+		try {
+			for(String fieldName : new String[] {"shopItem", "selectedOffer", "ak"}) {
+				try {
+					java.lang.reflect.Field field = MerchantScreen.class.getDeclaredField(fieldName);
+					field.setAccessible(true);
+					return field;
+				}catch(ReflectiveOperationException ignored) {
+				}
+			}
+			System.out.println("Failed to resolve MerchantScreen selected offer field");
+			return null;
+		}catch(RuntimeException e) {
+			System.out.println("Failed to resolve MerchantScreen selected offer field");
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	private boolean isAxeAboutToBreak(Minecraft client) {
+		if(client.player == null)
+			return false;
+
+		ItemStack stack = client.player.getMainHandItem();
+		if(!isAxe(stack) && !stack.isDamageableItem())
+			return false;
+
+		if(!stack.isDamageableItem())
+			return false;
+
+		int remaining = stack.getMaxDamage() - stack.getDamageValue();
+		return remaining <= 1;
+	}
+
+	private boolean isAxe(ItemStack stack) {
+		return stack.is(Items.NETHERITE_AXE) || stack.is(Items.DIAMOND_AXE) || stack.is(Items.GOLDEN_AXE)
+			|| stack.is(Items.IRON_AXE) || stack.is(Items.STONE_AXE) || stack.is(Items.WOODEN_AXE);
 	}
 
 	private double rangeSq(int range) {
