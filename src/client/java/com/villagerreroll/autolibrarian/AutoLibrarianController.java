@@ -1,6 +1,5 @@
 package com.villagerreroll.autolibrarian;
 
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
@@ -13,6 +12,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ServerboundSelectTradePacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
@@ -36,9 +36,6 @@ import com.villagerreroll.config.TargetBook;
 import com.villagerreroll.config.VillagerRerollConfig;
 
 public final class AutoLibrarianController {
-	private static final Method MERCHANT_POST_BUTTON_CLICK = findMerchantPostButtonClick();
-	private static final java.lang.reflect.Field MERCHANT_SELECTED_OFFER = findMerchantSelectedOfferField();
-
 	private record BookTradeInfo(String enchantmentId, int level, int price) {
 	}
 
@@ -54,6 +51,8 @@ public final class AutoLibrarianController {
 	private boolean breakingJobSite;
 	private boolean breakingStarted;
 	private boolean waitingForLectern;
+	private Integer lockInTradePendingOfferIndex;
+	private int lockInTradePendingCooldown;
 	private int cooldownTicks;
 
 	public AutoLibrarianController(VillagerRerollConfig config, Path configPath) {
@@ -96,6 +95,8 @@ public final class AutoLibrarianController {
 		breakingJobSite = false;
 		breakingStarted = false;
 		waitingForLectern = false;
+		lockInTradePendingOfferIndex = null;
+		lockInTradePendingCooldown = 0;
 		cooldownTicks = 0;
 		notify(client, "Right click the lectern you wish to roll.");
 		return true;
@@ -108,6 +109,8 @@ public final class AutoLibrarianController {
 		breakingJobSite = false;
 		breakingStarted = false;
 		waitingForLectern = false;
+		lockInTradePendingOfferIndex = null;
+		lockInTradePendingCooldown = 0;
 		cooldownTicks = 0;
 		if(client.gameMode != null && client.gameMode.isDestroying())
 			client.gameMode.stopDestroyBlock();
@@ -127,6 +130,31 @@ public final class AutoLibrarianController {
 			return;
 		if(client.level == null || client.player == null || client.gameMode == null)
 			return;
+		if(lockInTradePendingOfferIndex != null) {
+			if(!(client.screen instanceof MerchantScreen merchantScreen)) {
+				lockInTradePendingOfferIndex = null;
+				lockInTradePendingCooldown = 0;
+				stop(client, "Trade screen closed before locking the trade.");
+				return;
+			}
+
+			if(lockInTradePendingCooldown > 0) {
+				lockInTradePendingCooldown--;
+				return;
+			}
+
+			int offerIndex = lockInTradePendingOfferIndex.intValue();
+			if(lockInTrade(client, merchantScreen, offerIndex)) {
+				lockInTradePendingOfferIndex = null;
+				lockInTradePendingCooldown = 0;
+				stop(client, "Stopped on match and locked trade.");
+			} else {
+				lockInTradePendingOfferIndex = null;
+				lockInTradePendingCooldown = 0;
+				stop(client, "Stopped on match, but could not lock trade.");
+			}
+			return;
+		}
 		if(client.screen != null
 			&& client.screen.getClass().getPackageName().equals("com.villagerreroll.screen"))
 			return;
@@ -292,10 +320,9 @@ public final class AutoLibrarianController {
 			MatchedTrade found = match.get();
 			notify(client, "Found " + describe(found.target()) + ".");
 			if(config.isLockInTrade()) {
-				if(lockInTrade(client, screen, found.offerIndex()))
-					stop(client, "Stopped on match and locked trade.");
-				else
-					stop(client, "Stopped on match, but could not lock trade.");
+				lockInTradePendingOfferIndex = found.offerIndex();
+				lockInTradePendingCooldown = 1;
+				notify(client, "Locking trade...");
 			} else {
 				stop(client, "Stopped on match.");
 			}
@@ -582,52 +609,17 @@ public final class AutoLibrarianController {
 	}
 
 	private boolean lockInTrade(Minecraft client, MerchantScreen screen, int offerIndex) {
-		if(MERCHANT_POST_BUTTON_CLICK == null) {
-			notify(client, "Lock-in is unavailable in this build.");
-			return false;
-		}
-
 		try {
 			screen.getMenu().setSelectionHint(offerIndex);
-			if(MERCHANT_SELECTED_OFFER != null)
-				MERCHANT_SELECTED_OFFER.setInt(screen, offerIndex);
-			MERCHANT_POST_BUTTON_CLICK.invoke(screen);
+			screen.getMenu().tryMoveItems(offerIndex);
+			client.getConnection().send(new ServerboundSelectTradePacket(offerIndex));
+			client.gameMode.handleContainerInput(screen.getMenu().containerId,
+				2, 0, ContainerInput.PICKUP, client.player);
 			return true;
-		}catch(ReflectiveOperationException | IllegalArgumentException e) {
-			notify(client, "Failed to lock the trade.");
+		} catch(Exception e) {
+			System.out.println("Failed to lock in trade");
 			e.printStackTrace();
 			return false;
-		}
-	}
-
-	private static Method findMerchantPostButtonClick() {
-		try {
-			Method method = MerchantScreen.class.getDeclaredMethod("postButtonClick");
-			method.setAccessible(true);
-			return method;
-		}catch(ReflectiveOperationException e) {
-			System.out.println("Failed to resolve MerchantScreen.postButtonClick()");
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	private static java.lang.reflect.Field findMerchantSelectedOfferField() {
-		try {
-			for(String fieldName : new String[] {"shopItem", "selectedOffer", "ak"}) {
-				try {
-					java.lang.reflect.Field field = MerchantScreen.class.getDeclaredField(fieldName);
-					field.setAccessible(true);
-					return field;
-				}catch(ReflectiveOperationException ignored) {
-				}
-			}
-			System.out.println("Failed to resolve MerchantScreen selected offer field");
-			return null;
-		}catch(RuntimeException e) {
-			System.out.println("Failed to resolve MerchantScreen selected offer field");
-			e.printStackTrace();
-			return null;
 		}
 	}
 
