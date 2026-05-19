@@ -3,7 +3,7 @@
 	"id": "villager_reroll",
 	"version": "${version}",
 	"name": "Villager Reroll",
-	"description": "Automates librarian lectern rerolls until a desired enchanted book appears.",
+	"description": "Automates librarian lectern rerolls. Press R to configure target books, then right-click a lectern to start rolling. Stops when a desired enchanted book is found.",
 	"authors": [
 		"Copilot"
 	],
