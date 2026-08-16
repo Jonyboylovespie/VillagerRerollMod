@@ -38,7 +38,7 @@ public final class EnchantmentSelectScreen extends Screen {
 		addEnchantmentButtons();
 
 		int buttonY = height - 28;
-		addRenderableWidget(Button.builder(Component.literal("Cancel"), b -> minecraft.setScreen(parentScreen))
+		addRenderableWidget(Button.builder(Component.literal("Cancel"), b -> minecraft.gui.setScreen(parentScreen))
 			.bounds(width / 2 - 50, buttonY, 100, 20).build());
 	}
 
@@ -91,7 +91,7 @@ public final class EnchantmentSelectScreen extends Screen {
 
 	private void addEnchantment(SelectableEnchantment enchantment) {
 		TargetBook target = new TargetBook(enchantment.id().toString(), enchantment.enchantment().getMaxLevel(), 64);
-		minecraft.setScreen(new TargetBookCostScreen(parentScreen, controller, -1, target));
+		minecraft.gui.setScreen(new TargetBookCostScreen(parentScreen, controller, -1, target));
 	}
 
 	private record SelectableEnchantment(Identifier id, Enchantment enchantment) {

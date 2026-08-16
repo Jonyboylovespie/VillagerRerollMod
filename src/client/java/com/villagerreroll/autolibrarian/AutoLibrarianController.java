@@ -131,7 +131,7 @@ public final class AutoLibrarianController {
 		if(client.level == null || client.player == null || client.gameMode == null)
 			return;
 		if(lockInTradePendingOfferIndex != null) {
-			if(!(client.screen instanceof MerchantScreen merchantScreen)) {
+			if(!(client.gui.screen() instanceof MerchantScreen merchantScreen)) {
 				lockInTradePendingOfferIndex = null;
 				lockInTradePendingCooldown = 0;
 				stop(client, "Trade screen closed before locking the trade.");
@@ -155,8 +155,8 @@ public final class AutoLibrarianController {
 			}
 			return;
 		}
-		if(client.screen != null
-			&& client.screen.getClass().getPackageName().equals("com.villagerreroll.screen"))
+		if(client.gui.screen() != null
+			&& client.gui.screen().getClass().getPackageName().equals("com.villagerreroll.screen"))
 			return;
 		if(awaitingLectern)
 			return;
@@ -177,7 +177,7 @@ public final class AutoLibrarianController {
 			return;
 		}
 
-		if(client.screen instanceof MerchantScreen merchantScreen) {
+		if(client.gui.screen() instanceof MerchantScreen merchantScreen) {
 			handleTradeScreen(client, merchantScreen);
 			return;
 		}
@@ -424,7 +424,7 @@ public final class AutoLibrarianController {
 
 		return villagers.stream().min(Comparator
 			.comparingInt((Villager villager) -> villager.getVillagerData()
-				.profession() == VillagerProfession.LIBRARIAN ? 0 : 1)
+				.profession().is(VillagerProfession.LIBRARIAN) ? 0 : 1)
 			.thenComparingDouble(villager -> villager.distanceToSqr(client.player)))
 			.orElse(null);
 	}

@@ -128,7 +128,7 @@ public final class TargetBookCostScreen extends Screen {
 		controller.saveConfig();
 		if(parentScreen instanceof TargetBookListScreen listScreen)
 			listScreen.refreshEntries();
-		minecraft.setScreen(parentScreen);
+		minecraft.gui.setScreen(parentScreen);
 	}
 
 	private int readCostOrDefault() {
@@ -155,6 +155,6 @@ public final class TargetBookCostScreen extends Screen {
 	private void closeWithoutSaving() {
 		if(parentScreen instanceof TargetBookListScreen listScreen)
 			listScreen.refreshEntries();
-		minecraft.setScreen(parentScreen);
+		minecraft.gui.setScreen(parentScreen);
 	}
 }

@@ -43,11 +43,11 @@ public final class VillagerRerollClient implements ClientModInitializer {
 
 	private static void onClientTick(Minecraft client) {
 		while(OPEN_MENU_KEY.consumeClick()) {
-			Screen current = client.screen;
+			Screen current = client.gui.screen();
 			if(current != null && current.getClass().getPackageName().equals("com.villagerreroll.screen"))
 				continue;
 
-			client.setScreen(new TargetBookListScreen(current, CONTROLLER));
+			client.gui.setScreen(new TargetBookListScreen(current, CONTROLLER));
 		}
 		CONTROLLER.tick(client);
 	}

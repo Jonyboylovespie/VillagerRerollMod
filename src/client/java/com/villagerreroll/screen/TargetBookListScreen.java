@@ -88,7 +88,7 @@ public final class TargetBookListScreen extends Screen {
 
 	void refreshEntries() {
 		if(minecraft != null)
-			minecraft.setScreen(this);
+			minecraft.gui.setScreen(this);
 	}
 
 	private void addTargetButtons(List<TargetBook> targets) {
@@ -112,11 +112,11 @@ public final class TargetBookListScreen extends Screen {
 
 	private void selectTarget(int index) {
 		selectedIndex = index;
-		minecraft.setScreen(this);
+		minecraft.gui.setScreen(this);
 	}
 
 	private void openAddScreen() {
-		minecraft.setScreen(new EnchantmentSelectScreen(this, controller));
+		minecraft.gui.setScreen(new EnchantmentSelectScreen(this, controller));
 	}
 
 	private void openEditScreen() {
@@ -124,7 +124,7 @@ public final class TargetBookListScreen extends Screen {
 		if(selected == null)
 			return;
 
-		minecraft.setScreen(new TargetBookCostScreen(this, controller, selectedIndex, selected));
+		minecraft.gui.setScreen(new TargetBookCostScreen(this, controller, selectedIndex, selected));
 	}
 
 	private void removeSelected() {
@@ -134,18 +134,18 @@ public final class TargetBookListScreen extends Screen {
 		controller.removeTarget(selectedIndex);
 		if(selectedIndex >= controller.getTargets().size())
 			selectedIndex = controller.getTargets().size() - 1;
-		minecraft.setScreen(this);
+		minecraft.gui.setScreen(this);
 	}
 
 	private void closeAndSave() {
 		controller.saveConfig();
-		minecraft.setScreen(parentScreen);
+		minecraft.gui.setScreen(parentScreen);
 	}
 
 	private void startRolling() {
 		controller.saveConfig();
 		if(controller.armForLectern(minecraft))
-			minecraft.setScreen(parentScreen);
+			minecraft.gui.setScreen(parentScreen);
 	}
 
 	private void stopRolling() {
