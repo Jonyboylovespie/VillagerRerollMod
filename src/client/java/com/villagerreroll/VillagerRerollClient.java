@@ -17,7 +17,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.level.block.Blocks;
-import org.lwjgl.glfw.GLFW;
 
 public final class VillagerRerollClient implements ClientModInitializer {
 	private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir()
@@ -27,7 +26,7 @@ public final class VillagerRerollClient implements ClientModInitializer {
 			com.villagerreroll.config.VillagerRerollConfig.load(CONFIG_PATH),
 			CONFIG_PATH);
 	private static final KeyMapping OPEN_MENU_KEY = new KeyMapping(
-		"key.villager_reroll.open_menu", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R,
+		"key.villager_reroll.open_menu", InputConstants.Type.KEYBOARD, InputConstants.KEY_R,
 		KeyMapping.Category.MISC);
 
 	public static AutoLibrarianController getController() {

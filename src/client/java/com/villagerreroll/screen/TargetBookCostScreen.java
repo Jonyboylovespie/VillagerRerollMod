@@ -1,5 +1,6 @@
 package com.villagerreroll.screen;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.villagerreroll.autolibrarian.AutoLibrarianController;
 import com.villagerreroll.config.TargetBook;
 
@@ -9,7 +10,6 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
 
 public final class TargetBookCostScreen extends Screen {
 	private final Screen parentScreen;
@@ -72,12 +72,12 @@ public final class TargetBookCostScreen extends Screen {
 
 	@Override
 	public boolean keyPressed(KeyEvent event) {
-		if(event.key() == GLFW.GLFW_KEY_ESCAPE) {
+		if(event.key() == InputConstants.KEY_ESCAPE) {
 			closeWithoutSaving();
 			return true;
 		}
 
-		if(event.key() == GLFW.GLFW_KEY_ENTER && saveButton.active) {
+		if(event.key() == InputConstants.KEY_RETURN && saveButton.active) {
 			saveAndClose();
 			return true;
 		}

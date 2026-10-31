@@ -16,6 +16,7 @@ import net.minecraft.network.protocol.game.ServerboundSelectTradePacket;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -446,7 +447,7 @@ public final class AutoLibrarianController {
 		InteractionHand hand = InteractionHand.MAIN_HAND;
 		BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(jobSite), net.minecraft.core.Direction.UP, jobSite, false);
 		client.gameMode.useItemOn(client.player, hand, hit);
-		client.player.swing(hand);
+		client.player.swing(hand, SwingAnimation.DEFAULT, true);
 		return true;
 	}
 
@@ -473,7 +474,7 @@ public final class AutoLibrarianController {
 			: client.gameMode.startDestroyBlock(jobSite, Direction.UP);
 		breakingStarted = true;
 		if(started)
-			client.player.swing(InteractionHand.MAIN_HAND);
+			client.player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, true);
 	}
 
 	private void beginBreakingJobSite(Minecraft client, BlockPos jobSite, BlockState state) {
@@ -502,7 +503,7 @@ public final class AutoLibrarianController {
 		Vec3 hitVec = villager.getBoundingBox().getCenter();
 		EntityHitResult hitResult = new EntityHitResult(villager, hitVec);
 		client.gameMode.interact(client.player, villager, hitResult, InteractionHand.MAIN_HAND);
-		client.player.swing(InteractionHand.MAIN_HAND);
+		client.player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, true);
 	}
 
 	private boolean equipLectern(Minecraft client) {
