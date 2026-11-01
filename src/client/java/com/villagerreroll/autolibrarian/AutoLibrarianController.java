@@ -99,7 +99,7 @@ public final class AutoLibrarianController {
 		lockInTradePendingOfferIndex = null;
 		lockInTradePendingCooldown = 0;
 		cooldownTicks = 0;
-		log("Right click the lectern you wish to roll.");
+		notify(client, "Right click the lectern you wish to roll.");
 		return true;
 	}
 
@@ -299,7 +299,7 @@ public final class AutoLibrarianController {
 		breakingStarted = false;
 		waitingForLectern = false;
 		cooldownTicks = 4;
-		log("Rolling started.");
+		notify(client, "Rolling started.");
 		return true;
 	}
 
@@ -321,11 +321,11 @@ public final class AutoLibrarianController {
 		Optional<MatchedTrade> match = findMatchingOffer(client, screen.getMenu().getOffers());
 		if(match.isPresent()) {
 			MatchedTrade found = match.get();
-			log("Found " + describe(found.target()) + ".");
+			notify(client, "Found " + describe(found.target()) + ".");
 			if(config.isLockInTrade()) {
 				lockInTradePendingOfferIndex = found.offerIndex();
 				lockInTradePendingCooldown = 1;
-				log("Locking trade...");
+				notify(client, "Locking trade...");
 			} else {
 				stop(client, "Stopped on match.");
 			}
@@ -441,7 +441,7 @@ public final class AutoLibrarianController {
 		if(!equipLectern(client)) {
 			if(!waitingForLectern) {
 				waitingForLectern = true;
-				log("Waiting for you to put a lecturn in your hotbar or inventory");
+				notify(client, "Waiting for you to put a lecturn in your hotbar or inventory");
 			}
 			return false;
 		}
