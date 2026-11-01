@@ -99,7 +99,7 @@ public final class AutoLibrarianController {
 		lockInTradePendingOfferIndex = null;
 		lockInTradePendingCooldown = 0;
 		cooldownTicks = 0;
-		notify(client, "Right click the lectern you wish to roll.");
+		log("Right click the lectern you wish to roll.");
 		return true;
 	}
 
@@ -172,14 +172,14 @@ public final class AutoLibrarianController {
 			return;
 		}
 
-		Villager villager = findTargetVillager(client, jobSite);
-		if(villager == null) {
-			stop(client, "Couldn't find a nearby villager.");
+		if(client.gui.screen() instanceof MerchantScreen merchantScreen) {
+			handleTradeScreen(client, merchantScreen);
 			return;
 		}
 
-		if(client.gui.screen() instanceof MerchantScreen merchantScreen) {
-			handleTradeScreen(client, merchantScreen);
+		Villager villager = findTargetVillager(client, jobSite);
+		if(villager == null) {
+			cooldownTicks = 4;
 			return;
 		}
 
@@ -299,7 +299,7 @@ public final class AutoLibrarianController {
 		breakingStarted = false;
 		waitingForLectern = false;
 		cooldownTicks = 4;
-		notify(client, "Rolling started.");
+		log("Rolling started.");
 		return true;
 	}
 
@@ -312,20 +312,20 @@ public final class AutoLibrarianController {
 			return;
 
 		if(screen.getMenu().getTraderXp() > 0) {
-			notify(client, "Villager is already experienced. Rerolling...");
+			log("Villager is already experienced. Waiting for an unexperienced villager...");
 			client.player.closeContainer();
-			rerollPending = true;
+			cooldownTicks = 4;
 			return;
 		}
 
 		Optional<MatchedTrade> match = findMatchingOffer(client, screen.getMenu().getOffers());
 		if(match.isPresent()) {
 			MatchedTrade found = match.get();
-			notify(client, "Found " + describe(found.target()) + ".");
+			log("Found " + describe(found.target()) + ".");
 			if(config.isLockInTrade()) {
 				lockInTradePendingOfferIndex = found.offerIndex();
 				lockInTradePendingCooldown = 1;
-				notify(client, "Locking trade...");
+				log("Locking trade...");
 			} else {
 				stop(client, "Stopped on match.");
 			}
@@ -335,10 +335,10 @@ public final class AutoLibrarianController {
 		Optional<BookTradeInfo> book = findFirstBookOffer(client, screen.getMenu().getOffers());
 		if(book.isPresent()) {
 			BookTradeInfo info = book.get();
-			notify(client, "Selling " + info.enchantmentId() + " " + info.level()
+			log("Selling " + info.enchantmentId() + " " + info.level()
 				+ " for " + info.price() + " emeralds. Rerolling...");
 		} else {
-			notify(client, "Not selling a book. Rerolling...");
+			log("Not selling a book. Rerolling...");
 		}
 
 		client.player.closeContainer();
@@ -420,6 +420,8 @@ public final class AutoLibrarianController {
 					return false;
 				if(villager.isBaby())
 					return false;
+				if(villager.getVillagerXp() > 0)
+					return false;
 				if(villager.distanceToSqr(Vec3.atCenterOf(jobSite)) > rangeSq(config.getRange()))
 					return false;
 				return true;
@@ -439,7 +441,7 @@ public final class AutoLibrarianController {
 		if(!equipLectern(client)) {
 			if(!waitingForLectern) {
 				waitingForLectern = true;
-				notify(client, "Waiting for you to put a lecturn in your hotbar or inventory");
+				log("Waiting for you to put a lecturn in your hotbar or inventory");
 			}
 			return false;
 		}
@@ -655,5 +657,9 @@ public final class AutoLibrarianController {
 		System.out.println(message);
 		if(client.player != null)
 			client.player.sendSystemMessage(Component.literal(message));
+	}
+
+	private void log(String text) {
+		System.out.println("[Villager Reroll] " + text);
 	}
 }
