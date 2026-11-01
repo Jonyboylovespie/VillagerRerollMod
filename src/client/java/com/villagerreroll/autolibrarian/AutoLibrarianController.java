@@ -312,7 +312,9 @@ public final class AutoLibrarianController {
 			return;
 
 		if(screen.getMenu().getTraderXp() > 0) {
-			stop(client, "This villager is already experienced and won't reroll.");
+			notify(client, "Villager is already experienced. Rerolling...");
+			client.player.closeContainer();
+			rerollPending = true;
 			return;
 		}
 
